@@ -39,12 +39,9 @@ class CONSOLE_OT_Cut(bpy.types.Operator):
     bl_idname = "console.cut"
     bl_label = "console cut"
 
-    do_copy: bpy.props.BoolProperty(default=False)
-
     def execute(self, context):
         if context.area.type == 'CONSOLE':
-            if self.do_copy:
-                bpy.ops.console.copy()  # for the cut
+            bpy.ops.console.copy()  # for the cut
             sc = context.space_data
             st, se = (sc.select_start, sc.select_end)
             for _ in range(se-st):
@@ -52,6 +49,56 @@ class CONSOLE_OT_Cut(bpy.types.Operator):
                 for _ in range(st):
                     bpy.ops.console.move(type='PREVIOUS_CHARACTER')
                 bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
+            sc.select_start = st
+            sc.select_end = st
+            bpy.ops.console.select_set()
+
+            return {'FINISHED'}
+
+
+class CONSOLE_OT_Back_Space(bpy.types.Operator):
+    '''normal backspace behaviour in console'''
+    bl_idname = "console.back_space"
+    bl_label = "console back space"
+
+    def execute(self, context):
+        if context.area.type == 'CONSOLE':
+            sc = context.space_data
+            st, se = (sc.select_start, sc.select_end)
+            if st == se:
+                bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
+            for _ in range(se-st):
+                bpy.ops.console.move(type='LINE_END')
+                for _ in range(st):
+                    bpy.ops.console.move(type='PREVIOUS_CHARACTER')
+                bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
+            sc.select_start = st
+            sc.select_end = st
+            bpy.ops.console.select_set()
+            bpy.ops.console.copy()
+
+            return {'FINISHED'}
+
+
+class CONSOLE_OT_Suppr(bpy.types.Operator):
+    '''normal suppr behaviour in console'''
+    bl_idname = "console.suppr"
+    bl_label = "console suppr"
+
+    def execute(self, context):
+        if context.area.type == 'CONSOLE':
+            sc = context.space_data
+            st, se = (sc.select_start, sc.select_end)
+            if st == se:
+                bpy.ops.console.delete(type='NEXT_CHARACTER')
+            for _ in range(se-st):
+                bpy.ops.console.move(type='LINE_END')
+                for _ in range(st):
+                    bpy.ops.console.move(type='PREVIOUS_CHARACTER')
+                bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
+            sc.select_start = st
+            sc.select_end = st
+            bpy.ops.console.select_set()
 
             return {'FINISHED'}
 
@@ -62,6 +109,8 @@ addon_keymaps = []
 def register():
     bpy.utils.register_class(CONSOLE_OT_MoveCursor)
     bpy.utils.register_class(CONSOLE_OT_Cut)
+    bpy.utils.register_class(CONSOLE_OT_Back_Space)
+    bpy.utils.register_class(CONSOLE_OT_Suppr)
 
     wm = bpy.context.window_manager
     kc = wm.keyconfigs.addon
@@ -69,9 +118,9 @@ def register():
         km = kc.keymaps.new(name='Console', space_type='CONSOLE')
         kmi = km.keymap_items.new("console.set_cursor", "LEFTMOUSE", "PRESS")
         kmi = km.keymap_items.new("console.cut", "X", "PRESS", ctrl=True)
-        kmi.properties.do_copy = True
-        kmi = km.keymap_items.new("console.cut", "DEL", "PRESS")
-        kmi.properties.do_copy = False
+        kmi = km.keymap_items.new("console.back_space", "BACK_SPACE", "PRESS")
+        kmi = km.keymap_items.new("console.suppr", "RET", "PRESS")
+
         # quick favorite
         kmi = km.keymap_items.new("wm.call_menu", "Q", "PRESS", ctrl=True)
         kmi.properties.name = "SCREEN_MT_user_menu"
@@ -81,9 +130,14 @@ def register():
 def unregister():
     bpy.utils.unregister_class(CONSOLE_OT_MoveCursor)
     bpy.utils.unregister_class(CONSOLE_OT_Cut)
+    bpy.utils.unregister_class(CONSOLE_OT_Back_Space)
+    bpy.utils.unregister_class(CONSOLE_OT_Suppr)
 
-    for km, kmi in addon_keymaps:
-        km.keymap_items.remove(kmi)
+    wm = bpy.context.window_manager
+    kc = wm.keyconfigs.addon
+    if kc is not None:
+        for km, kmi in addon_keymaps:
+            km.keymap_items.remove(kmi)
 
 
 if __name__ == "__main__":
