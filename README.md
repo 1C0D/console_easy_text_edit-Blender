@@ -1,5 +1,5 @@
 # console_easy_text_edit-Blender
-Add essential feature to edition of text in Blender console
+Add essential features to edition of text in the Blender console
 
 ## move the cursor anywhere with the left mouse clic.
 no more boring right and left arrow...just wow
