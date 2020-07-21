@@ -2,7 +2,7 @@
 Add essential features for text edition in Blender console
 
 ## move the cursor anywhere with left mouse clic
-no more boring right and left arrow...just wow
+no more 1 by 1 move with right or left arrow
 ## cut selected text
 ctrl X
 ## suppr and backspace selection or 1 by 1
