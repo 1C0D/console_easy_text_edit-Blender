@@ -119,7 +119,7 @@ def register():
         kmi = km.keymap_items.new("console.set_cursor", "LEFTMOUSE", "PRESS")
         kmi = km.keymap_items.new("console.cut", "X", "PRESS", ctrl=True)
         kmi = km.keymap_items.new("console.back_space", "BACK_SPACE", "PRESS")
-        kmi = km.keymap_items.new("console.suppr", "RET", "PRESS")
+        kmi = km.keymap_items.new("console.suppr", "DEL", "PRESS")
 
         # quick favorite
         kmi = km.keymap_items.new("wm.call_menu", "Q", "PRESS", ctrl=True)
