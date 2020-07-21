@@ -11,7 +11,7 @@ bl_info = {
     "name": "console easy text edit",
     "description": "Add text editing options to console",
     "author": "1C0D",
-    "version": (1, 0, 1),
+    "version": (1, 1, 0),
     "blender": (2, 80, 0),
     "location": "Console",
     "category": "Console"
@@ -23,13 +23,17 @@ class CONSOLE_OT_MoveCursor(bpy.types.Operator):
     bl_idname = "console.set_cursor"
     bl_label = "select_set_cursor"
 
+    @classmethod
+    def poll(cls, context):
+        return context.area.type == 'CONSOLE'
+
     def execute(self, context):
-        if context.area.type == 'CONSOLE':
-            bpy.ops.console.select_set('INVOKE_DEFAULT')
-            sc = context.space_data
-            bpy.ops.console.move(type='LINE_END')
-            for _ in range(sc.select_end):
-                bpy.ops.console.move(type='PREVIOUS_CHARACTER')
+
+        bpy.ops.console.select_set('INVOKE_DEFAULT')
+        sc = context.space_data
+        bpy.ops.console.move(type='LINE_END')
+        for _ in range(sc.select_end):
+            bpy.ops.console.move(type='PREVIOUS_CHARACTER')
 
         return {'FINISHED'}
 
@@ -39,21 +43,24 @@ class CONSOLE_OT_Cut(bpy.types.Operator):
     bl_idname = "console.cut"
     bl_label = "console cut"
 
-    def execute(self, context):
-        if context.area.type == 'CONSOLE':
-            bpy.ops.console.copy()  # for the cut
-            sc = context.space_data
-            st, se = (sc.select_start, sc.select_end)
-            for _ in range(se-st):
-                bpy.ops.console.move(type='LINE_END')
-                for _ in range(st):
-                    bpy.ops.console.move(type='PREVIOUS_CHARACTER')
-                bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
-            sc.select_start = st
-            sc.select_end = st
-            bpy.ops.console.select_set()
+    @classmethod
+    def poll(cls, context):
+        return context.area.type == 'CONSOLE'
 
-            return {'FINISHED'}
+    def execute(self, context):
+
+        bpy.ops.console.copy()  # for the cut
+        sc = context.space_data
+        st, se = (sc.select_start, sc.select_end)
+        for _ in range(se-st):
+            bpy.ops.console.move(type='LINE_END')
+            for _ in range(st):
+                bpy.ops.console.move(type='PREVIOUS_CHARACTER')
+            bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
+        sc.select_start = st
+        sc.select_end = st
+
+        return {'FINISHED'}
 
 
 class CONSOLE_OT_Back_Space(bpy.types.Operator):
@@ -61,23 +68,25 @@ class CONSOLE_OT_Back_Space(bpy.types.Operator):
     bl_idname = "console.back_space"
     bl_label = "console back space"
 
-    def execute(self, context):
-        if context.area.type == 'CONSOLE':
-            sc = context.space_data
-            st, se = (sc.select_start, sc.select_end)
-            if st == se:
-                bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
-            for _ in range(se-st):
-                bpy.ops.console.move(type='LINE_END')
-                for _ in range(st):
-                    bpy.ops.console.move(type='PREVIOUS_CHARACTER')
-                bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
-            sc.select_start = st
-            sc.select_end = st
-            bpy.ops.console.select_set()
-            bpy.ops.console.copy()
+    @classmethod
+    def poll(cls, context):
+        return context.area.type == 'CONSOLE'
 
-            return {'FINISHED'}
+    def execute(self, context):
+
+        sc = context.space_data
+        st, se = (sc.select_start, sc.select_end)
+        if st == se:
+            bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
+        for _ in range(se-st):
+            bpy.ops.console.move(type='LINE_END')
+            for _ in range(st):
+                bpy.ops.console.move(type='PREVIOUS_CHARACTER')
+            bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
+        sc.select_start = st
+        sc.select_end = st
+
+        return {'FINISHED'}
 
 
 class CONSOLE_OT_Suppr(bpy.types.Operator):
@@ -85,22 +94,47 @@ class CONSOLE_OT_Suppr(bpy.types.Operator):
     bl_idname = "console.suppr"
     bl_label = "console suppr"
 
-    def execute(self, context):
-        if context.area.type == 'CONSOLE':
-            sc = context.space_data
-            st, se = (sc.select_start, sc.select_end)
-            if st == se:
-                bpy.ops.console.delete(type='NEXT_CHARACTER')
-            for _ in range(se-st):
-                bpy.ops.console.move(type='LINE_END')
-                for _ in range(st):
-                    bpy.ops.console.move(type='PREVIOUS_CHARACTER')
-                bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
-            sc.select_start = st
-            sc.select_end = st
-            bpy.ops.console.select_set()
+    @classmethod
+    def poll(cls, context):
+        return context.area.type == 'CONSOLE'
 
-            return {'FINISHED'}
+    def execute(self, context):
+
+        sc = context.space_data
+        st, se = (sc.select_start, sc.select_end)
+        if st == se:
+            bpy.ops.console.delete(type='NEXT_CHARACTER')
+        for _ in range(se-st):
+            bpy.ops.console.move(type='LINE_END')
+            for _ in range(st):
+                bpy.ops.console.move(type='PREVIOUS_CHARACTER')
+            bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
+        sc.select_start = st
+        sc.select_end = st
+
+        return {'FINISHED'}
+
+
+class CONSOLE_OT_Select_Line(bpy.types.Operator):
+    """select line"""
+    bl_idname = "console.select_line"
+    bl_label = "select whole line"
+
+    @classmethod
+    def poll(cls, context):
+        return context.area.type == 'CONSOLE'
+
+    def execute(self, context):
+
+        sc = context.space_data
+        line_object = sc.history[-1]
+        if line_object:
+            line = line_object.body
+            lenght = len(line)
+            st = sc.select_start = 0
+            se = sc.select_end = lenght
+
+        return {'FINISHED'}
 
 
 addon_keymaps = []
@@ -111,6 +145,7 @@ def register():
     bpy.utils.register_class(CONSOLE_OT_Cut)
     bpy.utils.register_class(CONSOLE_OT_Back_Space)
     bpy.utils.register_class(CONSOLE_OT_Suppr)
+    bpy.utils.register_class(CONSOLE_OT_Select_Line)
 
     wm = bpy.context.window_manager
     kc = wm.keyconfigs.addon
@@ -120,6 +155,8 @@ def register():
         kmi = km.keymap_items.new("console.cut", "X", "PRESS", ctrl=True)
         kmi = km.keymap_items.new("console.back_space", "BACK_SPACE", "PRESS")
         kmi = km.keymap_items.new("console.suppr", "DEL", "PRESS")
+        kmi = km.keymap_items.new(
+            "console.select_line", "A", "PRESS", ctrl=True)
 
         # quick favorite
         kmi = km.keymap_items.new("wm.call_menu", "Q", "PRESS", ctrl=True)
@@ -132,6 +169,7 @@ def unregister():
     bpy.utils.unregister_class(CONSOLE_OT_Cut)
     bpy.utils.unregister_class(CONSOLE_OT_Back_Space)
     bpy.utils.unregister_class(CONSOLE_OT_Suppr)
+    bpy.utils.unregister_class(CONSOLE_OT_Select_Line)
 
     wm = bpy.context.window_manager
     kc = wm.keyconfigs.addon
