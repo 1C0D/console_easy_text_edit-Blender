@@ -11,7 +11,7 @@ bl_info = {
     "name": "console easy text edit",
     "description": "Add text editing options to console",
     "author": "1C0D",
-    "version": (1, 1, 0),
+    "version": (1, 1, 1),
     "blender": (2, 80, 0),
     "location": "Console",
     "category": "Console"
@@ -21,7 +21,7 @@ bl_info = {
 class CONSOLE_OT_MoveCursor(bpy.types.Operator):
     """select_set_cursor"""
     bl_idname = "console.set_cursor"
-    bl_label = "select_set_cursor"
+    bl_label = "select set cursor"
 
     @classmethod
     def poll(cls, context):
@@ -91,7 +91,7 @@ class CONSOLE_OT_Back_Space(bpy.types.Operator):
 
 class CONSOLE_OT_Suppr(bpy.types.Operator):
     '''normal suppr behaviour in console'''
-    bl_idname = "console.suppr"
+    bl_idname = "console.supprx"
     bl_label = "console suppr"
 
     @classmethod
@@ -135,7 +135,7 @@ class CONSOLE_OT_Select_Line(bpy.types.Operator):
             se = sc.select_end = lenght
 
         return {'FINISHED'}
-
+        
 
 addon_keymaps = []
 
@@ -151,12 +151,19 @@ def register():
     kc = wm.keyconfigs.addon
     if kc is not None:
         km = kc.keymaps.new(name='Console', space_type='CONSOLE')
+        # kmi = km.keymap_items.new("console.set_cursorx", "DEL", "PRESS")
+        # addon_keymaps.append((km, kmi))
         kmi = km.keymap_items.new("console.set_cursor", "LEFTMOUSE", "PRESS")
+        addon_keymaps.append((km, kmi))        
         kmi = km.keymap_items.new("console.cut", "X", "PRESS", ctrl=True)
+        addon_keymaps.append((km, kmi))
         kmi = km.keymap_items.new("console.back_space", "BACK_SPACE", "PRESS")
-        kmi = km.keymap_items.new("console.suppr", "DEL", "PRESS")
+        addon_keymaps.append((km, kmi))
+        kmi = km.keymap_items.new("console.supprx", "DEL", "PRESS")
+        addon_keymaps.append((km, kmi))
         kmi = km.keymap_items.new(
-            "console.select_line", "A", "PRESS", ctrl=True)
+            "console.select_line", "A", "PRESS", ctrl=True)            
+        addon_keymaps.append((km, kmi))
 
         # quick favorite
         kmi = km.keymap_items.new("wm.call_menu", "Q", "PRESS", ctrl=True)
