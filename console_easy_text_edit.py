@@ -91,7 +91,7 @@ class CONSOLE_OT_Back_Space(bpy.types.Operator):
 
 class CONSOLE_OT_Suppr(bpy.types.Operator):
     '''normal suppr behaviour in console'''
-    bl_idname = "console.supprx"
+    bl_idname = "console.suppr"
     bl_label = "console suppr"
 
     @classmethod
@@ -151,8 +151,7 @@ def register():
     kc = wm.keyconfigs.addon
     if kc is not None:
         km = kc.keymaps.new(name='Console', space_type='CONSOLE')
-        # kmi = km.keymap_items.new("console.set_cursorx", "DEL", "PRESS")
-        # addon_keymaps.append((km, kmi))
+
         kmi = km.keymap_items.new("console.set_cursor", "LEFTMOUSE", "PRESS")
         addon_keymaps.append((km, kmi))        
         kmi = km.keymap_items.new("console.cut", "X", "PRESS", ctrl=True)
