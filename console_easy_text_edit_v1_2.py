@@ -2,6 +2,7 @@
 move cursor under mouse clic and selection
 add ctrl x: cut
 add ctrl Q: quick favorite
+add ctrl v: to past other selection
 
 """
 
