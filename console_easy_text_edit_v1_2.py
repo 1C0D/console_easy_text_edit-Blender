@@ -11,7 +11,7 @@ bl_info = {
 	"name": "console easy text edit",
 	"description": "Add text editing options to console",
 	"author": "1C0D",
-	"version": (1, 1, 1),
+	"version": (1, 2, 0),
 	"blender": (2, 80, 0),
 	"location": "Console",
 	"category": "Console"
@@ -59,6 +59,30 @@ class CONSOLE_OT_Cut(bpy.types.Operator):
 			bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
 		sc.select_start = st
 		sc.select_end = st
+
+		return {'FINISHED'}
+		
+class CONSOLE_OT_Paste(bpy.types.Operator):
+	'''paste selection in console over selection'''
+	bl_idname = "console.easy_paste"
+	bl_label = "console paste"
+
+	@classmethod
+	def poll(cls, context):
+		return context.area.type == 'CONSOLE'
+
+	def execute(self, context):
+
+		sc = context.space_data
+		st, se = (sc.select_start, sc.select_end)
+		for _ in range(se-st):
+			bpy.ops.console.move(type='LINE_END')
+			for _ in range(st):
+				bpy.ops.console.move(type='PREVIOUS_CHARACTER')
+			bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
+		sc.select_start = st
+		sc.select_end = st
+		bpy.ops.console.paste()
 
 		return {'FINISHED'}
 
@@ -143,9 +167,10 @@ addon_keymaps = []
 def register():
 	bpy.utils.register_class(CONSOLE_OT_MoveCursor)
 	bpy.utils.register_class(CONSOLE_OT_Cut)
+	bpy.utils.register_class(CONSOLE_OT_Paste)
 	bpy.utils.register_class(CONSOLE_OT_Back_Space)
 	bpy.utils.register_class(CONSOLE_OT_Suppr)
-	bpy.utils.register_class(CONSOLE_OT_Select_Line)
+	bpy.utils.register_class(CONSOLE_OT_Select_Line) 
 
 	wm = bpy.context.window_manager
 	kc = wm.keyconfigs.addon
@@ -155,14 +180,14 @@ def register():
 		addon_keymaps.append((km, kmi)) 	   
 		kmi = km.keymap_items.new("console.easy_cut", "X", "PRESS", ctrl=True)
 		addon_keymaps.append((km, kmi))
+		kmi = km.keymap_items.new("console.easy_paste", "V", "PRESS", ctrl=True)
+		addon_keymaps.append((km, kmi))
 		kmi = km.keymap_items.new("console.back_easy_space", "BACK_SPACE", "PRESS")
 		addon_keymaps.append((km, kmi))
 		kmi = km.keymap_items.new("console.easy_suppr", "DEL", "PRESS")
 		addon_keymaps.append((km, kmi))
-		kmi = km.keymap_items.new(
-			"console.easy_select_all", "A", "PRESS", ctrl=True) 		   
+		kmi = km.keymap_items.new("console.easy_select_all", "A", "PRESS", ctrl=True) 		   
 		addon_keymaps.append((km, kmi))
-
 		# quick favorite
 		kmi = km.keymap_items.new("wm.call_menu", "Q", "PRESS", ctrl=True)
 		kmi.properties.name = "SCREEN_MT_user_menu"
@@ -172,6 +197,7 @@ def register():
 def unregister():
 	bpy.utils.unregister_class(CONSOLE_OT_MoveCursor)
 	bpy.utils.unregister_class(CONSOLE_OT_Cut)
+	bpy.utils.unregister_class(CONSOLE_OT_Paste)
 	bpy.utils.unregister_class(CONSOLE_OT_Back_Space)
 	bpy.utils.unregister_class(CONSOLE_OT_Suppr)
 	bpy.utils.unregister_class(CONSOLE_OT_Select_Line)
