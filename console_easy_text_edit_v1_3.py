@@ -19,6 +19,15 @@ bl_info = {
     "category": "Console"
 }
 
+line_list = []
+st_list = []
+se_list = []
+cursor_pos_list = []
+redo_line = []
+redo_st = []
+redo_se = []
+redo_cursor_pos = []
+
 
 class CONSOLE_OT_MoveCursor(bpy.types.Operator):
     """select_set_cursor"""
@@ -51,12 +60,10 @@ class CONSOLE_OT_Cut(bpy.types.Operator):
 
     def execute(self, context):
 
-        global line, st, se, cursor_pos
-        
         bpy.ops.console.copy()  # for the cut
         sc = context.space_data
         st, se = (sc.select_start, sc.select_end)
-        #for undo
+        # for undo
         line_object = sc.history[-1]
         if line_object:
             line = line_object.body
@@ -70,6 +77,11 @@ class CONSOLE_OT_Cut(bpy.types.Operator):
             bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
         sc.select_start = st
         sc.select_end = st
+        # for undo
+        line_list.append(line)
+        st_list.append(st)
+        se_list.append(se)
+        cursor_pos_list.append(cursor_pos)
 
         return {'FINISHED'}
 
@@ -84,8 +96,6 @@ class CONSOLE_OT_Paste(bpy.types.Operator):
         return context.area.type == 'CONSOLE'
 
     def execute(self, context):
-
-        global line, st, se, cursor_pos
 
         sc = context.space_data
         st, se = (sc.select_start, sc.select_end)
@@ -104,19 +114,27 @@ class CONSOLE_OT_Paste(bpy.types.Operator):
         sc.select_end = se
         bpy.ops.console.paste()
 
+        line_list.append(line)
+        st_list.append(st)
+        se_list.append(se)
+        cursor_pos_list.append(cursor_pos)
+
         return {'FINISHED'}
 
 
 class CONSOLE_OT_Undo(bpy.types.Operator):
     """local undo"""
     bl_idname = "console.easy_undo"
-    bl_label = "undo"
+    bl_label = "console undo"
 
     @classmethod
     def poll(cls, context):
         return context.area.type == 'CONSOLE'
 
     def execute(self, context):
+
+        if not line_list:
+            return {'FINISHED'}
 
         sc = context.space_data
         st1, se1 = (sc.select_start, sc.select_end)
@@ -132,11 +150,69 @@ class CONSOLE_OT_Undo(bpy.types.Operator):
         for _ in range(lenght):
             bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
 
-        bpy.ops.console.insert(text=line)
-        sc.select_start = st
-        sc.select_end = se
-        for _ in range(cursor_pos):
+        bpy.ops.console.insert(text=(line_list[-1]))
+        sc.select_start = st_list[-1]
+        sc.select_end = se_list[-1]
+        for _ in range(cursor_pos_list[-1]):
             bpy.ops.console.move(type='PREVIOUS_CHARACTER')
+
+        if line_list:
+            redo_line.append(line_list[-1])
+            redo_st.append(st_list[-1])
+            redo_se.append(se_list[-1])
+            redo_cursor_pos.append(cursor_pos_list[-1])
+
+        line_list.pop()
+        st_list.pop()
+        se_list.pop()
+        cursor_pos_list.pop()
+
+        return {'FINISHED'}
+
+
+class CONSOLE_OT_Redo(bpy.types.Operator):
+    """local undo"""
+    bl_idname = "console.easy_redo"
+    bl_label = "console redo"
+
+    @classmethod
+    def poll(cls, context):
+        return context.area.type == 'CONSOLE'
+
+    def execute(self, context):
+
+        if not redo_line:
+            return {'FINISHED'}
+
+        sc = context.space_data
+        st1, se1 = (sc.select_start, sc.select_end)
+
+        line_object = sc.history[-1]
+        if line_object:
+            line1 = line_object.body
+            lenght = len(line1)
+            st1 = sc.select_start = 0
+            se1 = sc.select_end = lenght
+
+        bpy.ops.console.move(type='LINE_END')
+        for _ in range(lenght):
+            bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
+
+        bpy.ops.console.insert(text=(redo_line[-1]))
+        sc.select_start = redo_st[-1]
+        sc.select_end = redo_se[-1]
+        for _ in range(redo_cursor_pos[-1]):
+            bpy.ops.console.move(type='PREVIOUS_CHARACTER')
+
+        line_list.append(redo_line[-1])
+        st_list.append(redo_st[-1])
+        se_list.append(redo_se[-1])
+        cursor_pos_list.append(redo_cursor_pos[-1])
+
+        redo_line.pop()
+        redo_st.pop()
+        redo_se.pop()
+        redo_cursor_pos.pop()
 
         return {'FINISHED'}
 
@@ -152,7 +228,7 @@ class CONSOLE_OT_Back_Space(bpy.types.Operator):
 
     def execute(self, context):
 
-        global line, st, se, cursor_pos
+        global line_list, st_list, se_list, cursor_pos_list
 
         sc = context.space_data
         st, se = (sc.select_start, sc.select_end)
@@ -174,6 +250,11 @@ class CONSOLE_OT_Back_Space(bpy.types.Operator):
         sc.select_start = st
         sc.select_end = st
 
+        line_list.append(line)
+        st_list.append(st)
+        se_list.append(se)
+        cursor_pos_list.append(cursor_pos)
+
         return {'FINISHED'}
 
 
@@ -187,8 +268,6 @@ class CONSOLE_OT_Suppr(bpy.types.Operator):
         return context.area.type == 'CONSOLE'
 
     def execute(self, context):
-
-        global line, st, se, cursor_pos
 
         sc = context.space_data
         st, se = (sc.select_start, sc.select_end)
@@ -208,6 +287,11 @@ class CONSOLE_OT_Suppr(bpy.types.Operator):
                 bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
         sc.select_start = st
         sc.select_end = st
+
+        line_list.append(line)
+        st_list.append(st)
+        se_list.append(se)
+        cursor_pos_list.append(cursor_pos)
 
         return {'FINISHED'}
 
@@ -245,8 +329,6 @@ class CONSOLE_OT_Insert(bpy.types.Operator):
 
     def execute(self, context):
 
-        global line, st, se, cursor_pos
-
         sc = context.space_data
         st, se = (sc.select_start, sc.select_end)
         line_object = sc.history[-1]
@@ -267,6 +349,11 @@ class CONSOLE_OT_Insert(bpy.types.Operator):
             sc.select_end = st
             bpy.ops.console.insert('INVOKE_DEFAULT')
 
+        line_list.append(line)
+        st_list.append(st)
+        se_list.append(se)
+        cursor_pos_list.append(cursor_pos)
+
         return {'PASS_THROUGH'}
 
 
@@ -282,6 +369,7 @@ def register():
     bpy.utils.register_class(CONSOLE_OT_Insert)
     bpy.utils.register_class(CONSOLE_OT_Undo)
     bpy.utils.register_class(CONSOLE_OT_Select_Line)
+    bpy.utils.register_class(CONSOLE_OT_Redo)
 
     wm = bpy.context.window_manager
     kc = wm.keyconfigs.addon
@@ -308,6 +396,9 @@ def register():
         addon_keymaps.append((km, kmi))
         kmi = km.keymap_items.new("console.easy_undo", "Z", "PRESS", ctrl=True)
         addon_keymaps.append((km, kmi))
+        kmi = km.keymap_items.new(
+            "console.easy_redo", "Z", "PRESS", shift=True, ctrl=True)
+        addon_keymaps.append((km, kmi))
         # quick favorite
         kmi = km.keymap_items.new("wm.call_menu", "Q", "PRESS", ctrl=True)
         kmi.properties.name = "SCREEN_MT_user_menu"
@@ -323,6 +414,7 @@ def unregister():
     bpy.utils.unregister_class(CONSOLE_OT_Insert)
     bpy.utils.unregister_class(CONSOLE_OT_Undo)
     bpy.utils.unregister_class(CONSOLE_OT_Select_Line)
+    bpy.utils.unregister_class(CONSOLE_OT_Redo)
 
     wm = bpy.context.window_manager
     kc = wm.keyconfigs.addon
