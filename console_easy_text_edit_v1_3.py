@@ -52,7 +52,8 @@ class CONSOLE_OT_Cut(bpy.types.Operator):
     def execute(self, context):
 
         global line, st, se, cursor_pos
-
+        
+        bpy.ops.console.copy()  # for the cut
         sc = context.space_data
         st, se = (sc.select_start, sc.select_end)
         #for undo
@@ -163,12 +164,12 @@ class CONSOLE_OT_Back_Space(bpy.types.Operator):
 
         if st == se:
             bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
-
-        bpy.ops.console.move(type='LINE_END')
-        for _ in range(st):
-            bpy.ops.console.move(type='PREVIOUS_CHARACTER')
-        for _ in range(se-st):
-            bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
+        else:
+            bpy.ops.console.move(type='LINE_END')
+            for _ in range(st):
+                bpy.ops.console.move(type='PREVIOUS_CHARACTER')
+            for _ in range(se-st):
+                bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
 
         sc.select_start = st
         sc.select_end = st
@@ -199,11 +200,12 @@ class CONSOLE_OT_Suppr(bpy.types.Operator):
 
         if st == se:
             bpy.ops.console.delete(type='NEXT_CHARACTER')
-        bpy.ops.console.move(type='LINE_END')
-        for _ in range(st):
-            bpy.ops.console.move(type='PREVIOUS_CHARACTER')
-        for _ in range(se-st):
-            bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
+        else:
+            bpy.ops.console.move(type='LINE_END')
+            for _ in range(st):
+                bpy.ops.console.move(type='PREVIOUS_CHARACTER')
+            for _ in range(se-st):
+                bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
         sc.select_start = st
         sc.select_end = st
 
@@ -252,10 +254,6 @@ class CONSOLE_OT_Insert(bpy.types.Operator):
             line = line_object.body
             current = line_object.current_character
             cursor_pos = len(line)-current
-
-        line_object = sc.history[-1]
-        if line_object:
-            line = line_object.body
 
         if st == se:
             bpy.ops.console.insert('INVOKE_DEFAULT')
