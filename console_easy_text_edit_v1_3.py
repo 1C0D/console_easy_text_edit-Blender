@@ -2,6 +2,7 @@
 move cursor under mouse clic and selection
 ctrl x, ctrl v, suppr, backspace working with it and on selections
 undo Ctrl+Z (only 1 time) on all those operations (by default there is no undo in console)
+redo shift+ctrl+Z
 
 add ctrl Q: quick favorite
 
