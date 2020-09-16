@@ -8,4 +8,4 @@ create an usual text editor behaviour in console
 * del backspace selection
 * select line Ctrl+A
 * quick favorite Ctrl+Q
-*à venir undo
+* I added an undo/redo ctrl+Z ctrl+shift+Z
