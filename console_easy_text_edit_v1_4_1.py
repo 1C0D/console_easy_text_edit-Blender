@@ -15,7 +15,7 @@ bl_info = {
     "name": "console easy text edit",
     "description": "Add text editing options to console",
     "author": "1C0D",
-    "version": (1, 4, 0),
+    "version": (1, 4, 1),
     "blender": (2, 80, 0),
     "location": "Console",
     "category": "Console"
@@ -364,7 +364,7 @@ class CONSOLE_OT_Translate(bpy.types.Operator):
     """insert"""
     bl_idname = "console.easy_translate"
     bl_label = "console easy translate"
-
+    
     direction=bpy.props.StringProperty(default='back')
 
     @classmethod
@@ -390,12 +390,13 @@ class CONSOLE_OT_Translate(bpy.types.Operator):
             sc.select_end = se+1
 
         return {'PASS_THROUGH'}
-
+        
 def easy_panel(self, context):
     self.layout.separator()
-    self.layout.operator("console.easy_select_line", text="select line")        
-    self.layout.label(text="Translate selection |shift+right/left arrow|")
-    self.layout.operator("console.easy_cut", text="cut") 
+    self.layout.operator("console.easy_select_line", text="Select Line")
+    self.layout.operator("console.easy_translate", text="Translate Right").direction = "forward"
+    self.layout.operator("console.easy_translate", text="Translate Left")
+    self.layout.operator("console.easy_cut", text="Cut") 
 
 addon_keymaps = []
 
