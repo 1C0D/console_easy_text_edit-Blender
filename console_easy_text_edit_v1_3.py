@@ -1,9 +1,10 @@
 """
 move cursor under mouse clic and selection
-ctrl x, ctrl v, suppr, backspace working with it and on selections
-undo Ctrl+Z (only 1 time) on all those operations (by default there is no undo in console)
+ctrl x, ctrl v, suppr, backspace working even on selections
+undo Ctrl+Z
 redo shift+ctrl+Z
-
+ctrl A: select line
+shift+right/left arrow translate selection
 add ctrl Q: quick favorite
 
 """
@@ -14,7 +15,7 @@ bl_info = {
     "name": "console easy text edit",
     "description": "Add text editing options to console",
     "author": "1C0D",
-    "version": (1, 3, 0),
+    "version": (1, 4, 0),
     "blender": (2, 80, 0),
     "location": "Console",
     "category": "Console"
@@ -105,15 +106,17 @@ class CONSOLE_OT_Paste(bpy.types.Operator):
             line = line_object.body
             current = line_object.current_character
             cursor_pos = len(line)-current
-
-        bpy.ops.console.move(type='LINE_END')
-        for _ in range(st):
-            bpy.ops.console.move(type='PREVIOUS_CHARACTER')
-        for _ in range(se-st):
-            bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
-        sc.select_start = se
-        sc.select_end = se
-        bpy.ops.console.paste()
+        if st==se:
+            bpy.ops.console.paste()
+        else:
+            bpy.ops.console.move(type='LINE_END')
+            for _ in range(st):
+                bpy.ops.console.move(type='PREVIOUS_CHARACTER')
+            for _ in range(se-st):
+                bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
+            sc.select_start = se
+            sc.select_end = se
+            bpy.ops.console.paste()
 
         line_list.append(line)
         st_list.append(st)
@@ -299,7 +302,7 @@ class CONSOLE_OT_Suppr(bpy.types.Operator):
 
 class CONSOLE_OT_Select_Line(bpy.types.Operator):
     """select line"""
-    bl_idname = "console.easy_select_all"
+    bl_idname = "console.easy_select_line"
     bl_label = "select whole line"
 
     @classmethod
@@ -357,9 +360,44 @@ class CONSOLE_OT_Insert(bpy.types.Operator):
 
         return {'PASS_THROUGH'}
 
+class CONSOLE_OT_Translate(bpy.types.Operator):
+    """insert"""
+    bl_idname = "console.easy_translate"
+    bl_label = "console easy translate"
+
+    direction=bpy.props.StringProperty(default='back')
+
+    @classmethod
+    def poll(cls, context):
+        return context.area.type == 'CONSOLE'
+
+    def execute(self, context):
+        #forward
+        sc = context.space_data
+        st, se = (sc.select_start, sc.select_end)
+
+        bpy.ops.console.easy_cut()
+        if self.direction=='forward':
+            bpy.ops.console.move(type='NEXT_CHARACTER')
+        else:
+            bpy.ops.console.move(type='PREVIOUS_CHARACTER')
+        bpy.ops.console.easy_paste()
+        if self.direction=='forward':
+            sc.select_start = st-1
+            sc.select_end = se-1
+        else:
+            sc.select_start = st+1
+            sc.select_end = se+1
+
+        return {'PASS_THROUGH'}
+
+def easy_panel(self, context):
+    self.layout.separator()
+    self.layout.operator("console.easy_select_line", text="select line")        
+    self.layout.label(text="Translate selection |shift+right/left arrow|")
+    self.layout.operator("console.easy_cut", text="cut") 
 
 addon_keymaps = []
-
 
 def register():
     bpy.utils.register_class(CONSOLE_OT_MoveCursor)
@@ -371,6 +409,9 @@ def register():
     bpy.utils.register_class(CONSOLE_OT_Undo)
     bpy.utils.register_class(CONSOLE_OT_Select_Line)
     bpy.utils.register_class(CONSOLE_OT_Redo)
+    bpy.utils.register_class(CONSOLE_OT_Translate)
+    bpy.types.CONSOLE_MT_console.prepend(easy_panel)
+    bpy.types.CONSOLE_MT_context_menu.prepend(easy_panel)
 
     wm = bpy.context.window_manager
     kc = wm.keyconfigs.addon
@@ -378,6 +419,13 @@ def register():
         km = kc.keymaps.new(name='Console', space_type='CONSOLE')
         kmi = km.keymap_items.new(
             "console.set_easy_cursor", "LEFTMOUSE", "PRESS")
+        addon_keymaps.append((km, kmi))
+        kmi = km.keymap_items.new(
+            "console.easy_translate", "RIGHT_ARROW", "PRESS", shift=True)
+        kmi.properties.direction = "forward"    
+        addon_keymaps.append((km, kmi))
+        kmi = km.keymap_items.new(
+            "console.easy_translate", "LEFT_ARROW", "PRESS", shift=True)
         addon_keymaps.append((km, kmi))
         kmi = km.keymap_items.new("console.easy_cut", "X", "PRESS", ctrl=True)
         addon_keymaps.append((km, kmi))
@@ -390,7 +438,7 @@ def register():
         kmi = km.keymap_items.new("console.easy_suppr", "DEL", "PRESS")
         addon_keymaps.append((km, kmi))
         kmi = km.keymap_items.new(
-            "console.easy_select_all", "A", "PRESS", ctrl=True)
+            "console.easy_select_line", "A", "PRESS", ctrl=True)
         addon_keymaps.append((km, kmi))
         kmi = km.keymap_items.new(
             "console.easy_insert", 'TEXTINPUT', 'ANY', any=True)
@@ -416,6 +464,9 @@ def unregister():
     bpy.utils.unregister_class(CONSOLE_OT_Undo)
     bpy.utils.unregister_class(CONSOLE_OT_Select_Line)
     bpy.utils.unregister_class(CONSOLE_OT_Redo)
+    bpy.utils.unregister_class(CONSOLE_OT_Translate)
+    bpy.types.CONSOLE_MT_console.remove(easy_panel)
+    bpy.types.CONSOLE_MT_context_menu.remove(easy_panel)
 
     wm = bpy.context.window_manager
     kc = wm.keyconfigs.addon
