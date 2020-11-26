@@ -15,7 +15,7 @@ bl_info = {
     "name": "console easy text edit",
     "description": "Add text editing options to console",
     "author": "1C0D",
-    "version": (1, 4, 1),
+    "version": (1, 4, 2),
     "blender": (2, 80, 0),
     "location": "Console",
     "category": "Console"
@@ -365,7 +365,7 @@ class CONSOLE_OT_Translate(bpy.types.Operator):
     bl_idname = "console.easy_translate"
     bl_label = "console easy translate"
     
-    direction=bpy.props.StringProperty(default='back')
+    direction:bpy.props.StringProperty(default='back')
 
     @classmethod
     def poll(cls, context):
