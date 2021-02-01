@@ -15,7 +15,7 @@ bl_info = {
     "name": "console easy text edit",
     "description": "Add text editing options to console",
     "author": "1C0D",
-    "version": (1, 4, 3),
+    "version": (1, 4, 4),
     "blender": (2, 80, 0),
     "location": "Console",
     "category": "Console"
@@ -456,15 +456,16 @@ def register():
 
 def unregister():
 
-    for c in classes:
-        bpy.utils.unregister_class(c)
-
-    bpy.types.CONSOLE_MT_console.remove(easy_panel)
-    bpy.types.CONSOLE_MT_context_menu.remove(easy_panel)
-
     wm = bpy.context.window_manager
     kc = wm.keyconfigs.addon
     if kc is not None:
         for km, kmi in addon_keymaps:
             km.keymap_items.remove(kmi)
 
+    addon_keymaps.clear()
+            
+    bpy.types.CONSOLE_MT_console.remove(easy_panel)
+    bpy.types.CONSOLE_MT_context_menu.remove(easy_panel)
+
+    for c in classes:
+        bpy.utils.unregister_class(c)
