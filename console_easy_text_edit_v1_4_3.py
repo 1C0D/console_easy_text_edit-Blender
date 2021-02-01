@@ -15,7 +15,7 @@ bl_info = {
     "name": "console easy text edit",
     "description": "Add text editing options to console",
     "author": "1C0D",
-    "version": (1, 4, 2),
+    "version": (1, 4, 3),
     "blender": (2, 80, 0),
     "location": "Console",
     "category": "Console"
@@ -400,17 +400,16 @@ def easy_panel(self, context):
 
 addon_keymaps = []
 
+classes=(CONSOLE_OT_MoveCursor, CONSOLE_OT_Cut, CONSOLE_OT_Paste, 
+            CONSOLE_OT_Back_Space, CONSOLE_OT_Suppr, CONSOLE_OT_Insert, 
+                CONSOLE_OT_Undo, CONSOLE_OT_Select_Line, CONSOLE_OT_Redo,
+                    CONSOLE_OT_Translate)
+
 def register():
-    bpy.utils.register_class(CONSOLE_OT_MoveCursor)
-    bpy.utils.register_class(CONSOLE_OT_Cut)
-    bpy.utils.register_class(CONSOLE_OT_Paste)
-    bpy.utils.register_class(CONSOLE_OT_Back_Space)
-    bpy.utils.register_class(CONSOLE_OT_Suppr)
-    bpy.utils.register_class(CONSOLE_OT_Insert)
-    bpy.utils.register_class(CONSOLE_OT_Undo)
-    bpy.utils.register_class(CONSOLE_OT_Select_Line)
-    bpy.utils.register_class(CONSOLE_OT_Redo)
-    bpy.utils.register_class(CONSOLE_OT_Translate)
+    
+    for c in classes:
+        bpy.utils.register_class(c)
+
     bpy.types.CONSOLE_MT_console.prepend(easy_panel)
     bpy.types.CONSOLE_MT_context_menu.prepend(easy_panel)
 
@@ -456,16 +455,10 @@ def register():
 
 
 def unregister():
-    bpy.utils.unregister_class(CONSOLE_OT_MoveCursor)
-    bpy.utils.unregister_class(CONSOLE_OT_Cut)
-    bpy.utils.unregister_class(CONSOLE_OT_Paste)
-    bpy.utils.unregister_class(CONSOLE_OT_Back_Space)
-    bpy.utils.unregister_class(CONSOLE_OT_Suppr)
-    bpy.utils.unregister_class(CONSOLE_OT_Insert)
-    bpy.utils.unregister_class(CONSOLE_OT_Undo)
-    bpy.utils.unregister_class(CONSOLE_OT_Select_Line)
-    bpy.utils.unregister_class(CONSOLE_OT_Redo)
-    bpy.utils.unregister_class(CONSOLE_OT_Translate)
+
+    for c in classes:
+        bpy.utils.register_class(c)
+
     bpy.types.CONSOLE_MT_console.remove(easy_panel)
     bpy.types.CONSOLE_MT_context_menu.remove(easy_panel)
 
@@ -475,9 +468,3 @@ def unregister():
         for km, kmi in addon_keymaps:
             km.keymap_items.remove(kmi)
 
-
-if __name__ == "__main__":
-    register()
-
-    # test call
-#    bpy.ops.object.simpl_operator()
