@@ -457,7 +457,7 @@ def register():
 def unregister():
 
     for c in classes:
-        bpy.utils.register_class(c)
+        bpy.utils.unregister_class(c)
 
     bpy.types.CONSOLE_MT_console.remove(easy_panel)
     bpy.types.CONSOLE_MT_context_menu.remove(easy_panel)
