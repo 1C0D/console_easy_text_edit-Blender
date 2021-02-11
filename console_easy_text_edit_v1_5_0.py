@@ -15,7 +15,7 @@ bl_info = {
     "name": "console easy text edit",
     "description": "Add text editing options to console",
     "author": "1C0D",
-    "version": (1, 4, 4),
+    "version": (1, 5, 0),
     "blender": (2, 80, 0),
     "location": "Console",
     "category": "Console"
@@ -38,15 +38,23 @@ class CONSOLE_OT_MoveCursor(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+
         return context.area.type == 'CONSOLE'
 
     def execute(self, context):
 
         bpy.ops.console.select_set('INVOKE_DEFAULT')
         sc = context.space_data
-        bpy.ops.console.move(type='LINE_END')
-        for _ in range(sc.select_end):
-            bpy.ops.console.move(type='PREVIOUS_CHARACTER')
+        se =  sc.select_end
+        line_object = sc.history[-1]
+        if line_object:
+            line = line_object.body
+            length = len(line)      
+        if se < length+3:
+            sc = context.space_data
+            bpy.ops.console.move(type='LINE_END')
+            for _ in range(sc.select_end):
+                bpy.ops.console.move(type='PREVIOUS_CHARACTER')
 
         return {'FINISHED'}
 
