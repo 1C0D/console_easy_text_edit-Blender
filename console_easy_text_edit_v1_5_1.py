@@ -15,7 +15,7 @@ bl_info = {
     "name": "console easy text edit",
     "description": "Add text editing options to console",
     "author": "1C0D",
-    "version": (1, 5, 0),
+    "version": (1, 5, 1),
     "blender": (2, 80, 0),
     "location": "Console",
     "category": "Console"
@@ -29,7 +29,6 @@ redo_line = []
 redo_st = []
 redo_se = []
 redo_cursor_pos = []
-
 
 class CONSOLE_OT_MoveCursor(bpy.types.Operator):
     """select_set_cursor"""
@@ -53,7 +52,7 @@ class CONSOLE_OT_MoveCursor(bpy.types.Operator):
         if se < length+3:
             sc = context.space_data
             bpy.ops.console.move(type='LINE_END')
-            for _ in range(sc.select_end):
+            for _ in range(se):
                 bpy.ops.console.move(type='PREVIOUS_CHARACTER')
 
         return {'FINISHED'}
@@ -239,17 +238,21 @@ class CONSOLE_OT_Back_Space(bpy.types.Operator):
         return context.area.type == 'CONSOLE'
 
     def execute(self, context):
-
+                
         global line_list, st_list, se_list, cursor_pos_list
 
         sc = context.space_data
         st, se = (sc.select_start, sc.select_end)
         line_object = sc.history[-1]
-        if line_object:
-            line = line_object.body
+        line = line_object.body
+        if not line:
+            return {'CANCELLED'}
+        length = len(line)
+        current = line_object.current_character
+        cursor_pos = len(line)-current
+        if se > length+3: #deselect
             current = line_object.current_character
-            cursor_pos = len(line)-current
-
+            st = se = current
         if st == se:
             bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
         else:
@@ -284,11 +287,15 @@ class CONSOLE_OT_Suppr(bpy.types.Operator):
         sc = context.space_data
         st, se = (sc.select_start, sc.select_end)
         line_object = sc.history[-1]
-        if line_object:
-            line = line_object.body
+        line = line_object.body
+        if not line:
+            return {'CANCELLED'}        
+        length = len(line)
+        current = line_object.current_character
+        cursor_pos = len(line)-current
+        if se > length+3: #deselect
             current = line_object.current_character
-            cursor_pos = len(line)-current
-
+            st = se = current
         if st == se:
             bpy.ops.console.delete(type='NEXT_CHARACTER')
         else:
@@ -297,6 +304,7 @@ class CONSOLE_OT_Suppr(bpy.types.Operator):
                 bpy.ops.console.move(type='PREVIOUS_CHARACTER')
             for _ in range(se-st):
                 bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
+
         sc.select_start = st
         sc.select_end = st
 
@@ -368,7 +376,7 @@ class CONSOLE_OT_Insert(bpy.types.Operator):
 
         return {'PASS_THROUGH'}
 
-class CONSOLE_OT_Translate(bpy.types.Operator):
+class CONSOLE_OT_Translate(bpy.types.Operator): #need to do redo
     """insert"""
     bl_idname = "console.easy_translate"
     bl_label = "console easy translate"
@@ -402,8 +410,8 @@ class CONSOLE_OT_Translate(bpy.types.Operator):
 def easy_panel(self, context):
     self.layout.separator()
     self.layout.operator("console.easy_select_line", text="Select Line")
-    self.layout.operator("console.easy_translate", text="Translate Right").direction = "forward"
-    self.layout.operator("console.easy_translate", text="Translate Left")
+#    self.layout.operator("console.easy_translate", text="Translate Right").direction = "forward"
+#    self.layout.operator("console.easy_translate", text="Translate Left")
     self.layout.operator("console.easy_cut", text="Cut") 
 
 addon_keymaps = []
@@ -411,7 +419,8 @@ addon_keymaps = []
 classes=(CONSOLE_OT_MoveCursor, CONSOLE_OT_Cut, CONSOLE_OT_Paste, 
             CONSOLE_OT_Back_Space, CONSOLE_OT_Suppr, CONSOLE_OT_Insert, 
                 CONSOLE_OT_Undo, CONSOLE_OT_Select_Line, CONSOLE_OT_Redo,
-                    CONSOLE_OT_Translate)
+#                    CONSOLE_OT_Translate
+                    )
 
 def register():
     
@@ -428,13 +437,13 @@ def register():
         kmi = km.keymap_items.new(
             "console.set_easy_cursor", "LEFTMOUSE", "PRESS")
         addon_keymaps.append((km, kmi))
-        kmi = km.keymap_items.new(
-            "console.easy_translate", "RIGHT_ARROW", "PRESS", shift=True)
-        kmi.properties.direction = "forward"    
-        addon_keymaps.append((km, kmi))
-        kmi = km.keymap_items.new(
-            "console.easy_translate", "LEFT_ARROW", "PRESS", shift=True)
-        addon_keymaps.append((km, kmi))
+#        kmi = km.keymap_items.new(
+#            "console.easy_translate", "RIGHT_ARROW", "PRESS", shift=True)
+#        kmi.properties.direction = "forward"    
+#        addon_keymaps.append((km, kmi))
+#        kmi = km.keymap_items.new(
+#            "console.easy_translate", "LEFT_ARROW", "PRESS", shift=True)
+#        addon_keymaps.append((km, kmi))
         kmi = km.keymap_items.new("console.easy_cut", "X", "PRESS", ctrl=True)
         addon_keymaps.append((km, kmi))
         kmi = km.keymap_items.new(
