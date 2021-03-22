@@ -6,7 +6,7 @@ create an usual text editor behaviour in console
 * cut selected text Ctrl+X
 * paste over a selection Ctrl+V
 * del backspace selection
-* select line Ctrl+A
-* translate selection shift+right/left arrow
+* select line Ctrl+A  
+* translate selection shift+right/left arrow  
 * quick favorite Ctrl+Q
 * I added an undo/redo ctrl+Z ctrl+shift+Z
