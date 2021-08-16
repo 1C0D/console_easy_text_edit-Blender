@@ -15,8 +15,8 @@ bl_info = {
     "name": "console easy text edit",
     "description": "Add text editing options to console",
     "author": "1C0D",
-    "version": (1, 5, 1),
-    "blender": (2, 80, 0),
+    "version": (1, 6, 0),
+    "blender": (2, 93, 0),
     "location": "Console",
     "category": "Console"
 }
@@ -69,7 +69,7 @@ class CONSOLE_OT_Cut(bpy.types.Operator):
 
     def execute(self, context):
 
-        bpy.ops.console.copy()  # for the cut
+        bpy.ops.console.copy()  # for the paste
         sc = context.space_data
         st, se = (sc.select_start, sc.select_end)
         # for undo
@@ -247,11 +247,10 @@ class CONSOLE_OT_Back_Space(bpy.types.Operator):
         line = line_object.body
         if not line:
             return {'CANCELLED'}
-        length = len(line)
         current = line_object.current_character
+        length = len(line)
         cursor_pos = len(line)-current
         if se > length+3: #deselect
-            current = line_object.current_character
             st = se = current
         if st == se:
             bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
@@ -331,9 +330,9 @@ class CONSOLE_OT_Select_Line(bpy.types.Operator):
         line_object = sc.history[-1]
         if line_object:
             line = line_object.body
-            lenght = len(line)
+            length = len(line)
             st = sc.select_start = 0
-            se = sc.select_end = lenght
+            se = sc.select_end = length
 
         return {'FINISHED'}
 
@@ -376,36 +375,81 @@ class CONSOLE_OT_Insert(bpy.types.Operator):
 
         return {'PASS_THROUGH'}
 
-class CONSOLE_OT_Translate(bpy.types.Operator): #need to do redo
-    """insert"""
-    bl_idname = "console.easy_translate"
-    bl_label = "console easy translate"
+# class CONSOLE_OT_Translate(bpy.types.Operator): #need to do redo
+    # """insert"""
+    # bl_idname = "console.easy_translate"
+    # bl_label = "console easy translate"
     
-    direction:bpy.props.StringProperty(default='back')
+    # direction:bpy.props.StringProperty(default='back')
+
+    # @classmethod
+    # def poll(cls, context):
+        # return context.area.type == 'CONSOLE'
+
+    # def execute(self, context):
+        # forward
+        # sc = context.space_data
+        # st, se = (sc.select_start, sc.select_end)
+
+        # bpy.ops.console.easy_cut()
+        # if self.direction=='forward':
+            # bpy.ops.console.move(type='NEXT_CHARACTER')
+        # else:
+            # bpy.ops.console.move(type='PREVIOUS_CHARACTER')
+        # bpy.ops.console.easy_paste()
+        # if self.direction=='forward':
+            # sc.select_start = st-1
+            # sc.select_end = se-1
+        # else:
+            # sc.select_start = st+1
+            # sc.select_end = se+1
+
+        # return {'PASS_THROUGH'}
+
+
+
+def get_area(context, area_type):
+    for window in context.window_manager.windows:
+        screen = window.screen
+        for area in screen.areas:
+            if area.type != area_type:
+                continue
+            for region in area.regions:
+                if region.type != 'WINDOW':
+                    continue
+                return window, screen, area, region
+                
+def override(context, *param):
+    override = {'window': param[0], 'screen': param[1], 'area': param[2], 'region': param[3]}
+    return {
+        **context.copy(),
+        **override,
+    }
+
+class TEXT_OT_Paste_console_to_text_editor(bpy.types.Operator):
+    """past to text editor"""
+    bl_idname = "text.paste_console_to_text_editor"
+    bl_label = "paste console to text editor"
 
     @classmethod
     def poll(cls, context):
-        return context.area.type == 'CONSOLE'
+        return context.area.type == 'TEXT_EDITOR'
 
     def execute(self, context):
-        #forward
-        sc = context.space_data
-        st, se = (sc.select_start, sc.select_end)
 
-        bpy.ops.console.easy_cut()
-        if self.direction=='forward':
-            bpy.ops.console.move(type='NEXT_CHARACTER')
-        else:
-            bpy.ops.console.move(type='PREVIOUS_CHARACTER')
-        bpy.ops.console.easy_paste()
-        if self.direction=='forward':
-            sc.select_start = st-1
-            sc.select_end = se-1
-        else:
-            sc.select_start = st+1
-            sc.select_end = se+1
+        sel = context.window_manager.clipboard
+        
+        if ("C." or "D.") in sel:
+            sel = sel.replace("C.", "bpy.context.").replace("D.", "bpy.data.")
+            print(sel)
 
-        return {'PASS_THROUGH'}
+        text = context.space_data.text
+        if text:
+            text.write(text=sel)
+
+        return {'FINISHED'}
+        
+
         
 def easy_panel(self, context):
     self.layout.separator()
@@ -419,6 +463,7 @@ addon_keymaps = []
 classes=(CONSOLE_OT_MoveCursor, CONSOLE_OT_Cut, CONSOLE_OT_Paste, 
             CONSOLE_OT_Back_Space, CONSOLE_OT_Suppr, CONSOLE_OT_Insert, 
                 CONSOLE_OT_Undo, CONSOLE_OT_Select_Line, CONSOLE_OT_Redo,
+                    TEXT_OT_Paste_console_to_text_editor,
 #                    CONSOLE_OT_Translate
                     )
 
@@ -469,6 +514,12 @@ def register():
         kmi = km.keymap_items.new("wm.call_menu", "Q", "PRESS", ctrl=True)
         kmi.properties.name = "SCREEN_MT_user_menu"
         addon_keymaps.append((km, kmi))
+        # copy to text editor
+        km = kc.keymaps.new(name='Text', space_type='TEXT_EDITOR')
+        kmi = km.keymap_items.new(
+            "text.paste_console_to_text_editor", "V", "PRESS", ctrl=True, shift=True)
+        addon_keymaps.append((km, kmi))
+
 
 
 def unregister():
