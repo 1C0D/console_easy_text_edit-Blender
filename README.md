@@ -8,4 +8,7 @@ create an usual text editor behaviour in console
 * del backspace selection 
 * select line Ctrl+A  
 * quick favorite Ctrl+Q  
-* I added an undo/redo ctrl+Z ctrl+shift+Z  
+* I added an undo/redo ctrl+Z ctrl+shift+Z 
+
+* in text editor shift+ctrl+V past expanded text (C. -> bpy.context, D. -> bpy.data.)   
+  copied from console or other...
