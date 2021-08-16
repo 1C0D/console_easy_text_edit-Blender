@@ -10,5 +10,5 @@ create an usual text editor behaviour in console
 * quick favorite Ctrl+Q  
 * I added an undo/redo ctrl+Z ctrl+shift+Z 
 
-* in text editor shift+ctrl+V past expanded text (C. -> bpy.context, D. -> bpy.data.)   [example](https://youtu.be/rk0CvmmCsng)
+* in text editor shift+ctrl+V past expanded text (C. -> bpy.context, D. -> bpy.data.)   [example](https://youtu.be/rk0CvmmCsng)  
   copied from console or other...
