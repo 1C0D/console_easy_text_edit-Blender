@@ -30,6 +30,7 @@ redo_st = []
 redo_se = []
 redo_cursor_pos = []
 
+
 class CONSOLE_OT_MoveCursor(bpy.types.Operator):
     """select_set_cursor"""
     bl_idname = "console.set_easy_cursor"
@@ -44,7 +45,7 @@ class CONSOLE_OT_MoveCursor(bpy.types.Operator):
 
         bpy.ops.console.select_set('INVOKE_DEFAULT')
         sc = context.space_data
-        se =  sc.select_end
+        se = sc.select_end
         line_object = sc.history[-1]
         if line_object:
             line = line_object.body
@@ -109,9 +110,7 @@ class CONSOLE_OT_Paste(bpy.types.Operator):
             line = line_object.body
             current = line_object.current_character
             cursor_pos = len(line)-current
-        if st==se:
-            bpy.ops.console.paste()
-        else:
+        if st != se:
             bpy.ops.console.move(type='LINE_END')
             for _ in range(st):
                 bpy.ops.console.move(type='PREVIOUS_CHARACTER')
@@ -119,8 +118,7 @@ class CONSOLE_OT_Paste(bpy.types.Operator):
                 bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
             sc.select_start = se
             sc.select_end = se
-            bpy.ops.console.paste()
-
+        bpy.ops.console.paste()
         line_list.append(line)
         st_list.append(st)
         se_list.append(se)
@@ -234,7 +232,7 @@ class CONSOLE_OT_Back_Space(bpy.types.Operator):
         return context.area.type == 'CONSOLE'
 
     def execute(self, context):
-                
+
         global line_list, st_list, se_list, cursor_pos_list
 
         sc = context.space_data
@@ -246,7 +244,7 @@ class CONSOLE_OT_Back_Space(bpy.types.Operator):
         current = line_object.current_character
         length = len(line)
         cursor_pos = len(line)-current
-        if se > length+3: #deselect
+        if se > length+3:  # deselect
             st = se = current
         if st == se:
             bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
@@ -284,11 +282,11 @@ class CONSOLE_OT_Suppr(bpy.types.Operator):
         line_object = sc.history[-1]
         line = line_object.body
         if not line:
-            return {'CANCELLED'}        
+            return {'CANCELLED'}
         length = len(line)
         current = line_object.current_character
         cursor_pos = len(line)-current
-        if se > length+3: #deselect
+        if se > length+3:  # deselect
             current = line_object.current_character
             st = se = current
         if st == se:
@@ -321,7 +319,7 @@ class CONSOLE_OT_Select_Line(bpy.types.Operator):
         return context.area.type == 'CONSOLE'
 
     def execute(self, context):
-        
+
         sc = context.space_data
         line_object = sc.history[-1]
         if line_object:
@@ -352,9 +350,7 @@ class CONSOLE_OT_Insert(bpy.types.Operator):
             current = line_object.current_character
             cursor_pos = len(line)-current
 
-        if st == se:
-            bpy.ops.console.insert('INVOKE_DEFAULT')
-        else:
+        if st != se:
             bpy.ops.console.move(type='LINE_END')
             for _ in range(st):
                 bpy.ops.console.move(type='PREVIOUS_CHARACTER')
@@ -362,8 +358,7 @@ class CONSOLE_OT_Insert(bpy.types.Operator):
                 bpy.ops.console.delete(type='PREVIOUS_CHARACTER')
             sc.select_start = st
             sc.select_end = st
-            bpy.ops.console.insert('INVOKE_DEFAULT')
-
+        bpy.ops.console.insert('INVOKE_DEFAULT')
         line_list.append(line)
         st_list.append(st)
         se_list.append(se)
@@ -382,13 +377,16 @@ def get_area(context, area_type):
                 if region.type != 'WINDOW':
                     continue
                 return window, screen, area, region
-                
+
+
 def override(context, *param):
-    override = {'window': param[0], 'screen': param[1], 'area': param[2], 'region': param[3]}
+    override = {'window': param[0], 'screen': param[1],
+                'area': param[2], 'region': param[3]}
     return {
         **context.copy(),
         **override,
     }
+
 
 class TEXT_OT_Paste_console_to_text_editor(bpy.types.Operator):
     """past to text editor"""
@@ -402,34 +400,34 @@ class TEXT_OT_Paste_console_to_text_editor(bpy.types.Operator):
     def execute(self, context):
 
         sel = context.window_manager.clipboard
-        
+
         if ("C." or "D.") in sel:
             sel = sel.replace("C.", "bpy.context.").replace("D.", "bpy.data.")
-            print(sel)
 
         text = context.space_data.text
         if text:
             text.write(text=sel)
 
         return {'FINISHED'}
-        
 
-        
+
 def easy_panel(self, context):
     self.layout.separator()
     self.layout.operator("console.easy_select_line", text="Select Line")
-    self.layout.operator("console.easy_cut", text="Cut") 
+    self.layout.operator("console.easy_cut", text="Cut")
+
 
 addon_keymaps = []
 
-classes=(CONSOLE_OT_MoveCursor, CONSOLE_OT_Cut, CONSOLE_OT_Paste, 
-            CONSOLE_OT_Back_Space, CONSOLE_OT_Suppr, CONSOLE_OT_Insert, 
-                CONSOLE_OT_Undo, CONSOLE_OT_Select_Line, CONSOLE_OT_Redo,
-                    TEXT_OT_Paste_console_to_text_editor,
-                    )
+classes = (CONSOLE_OT_MoveCursor, CONSOLE_OT_Cut, CONSOLE_OT_Paste,
+           CONSOLE_OT_Back_Space, CONSOLE_OT_Suppr, CONSOLE_OT_Insert,
+           CONSOLE_OT_Undo, CONSOLE_OT_Select_Line, CONSOLE_OT_Redo,
+           TEXT_OT_Paste_console_to_text_editor,
+           )
+
 
 def register():
-    
+
     for c in classes:
         bpy.utils.register_class(c)
 
@@ -475,7 +473,6 @@ def register():
         addon_keymaps.append((km, kmi))
 
 
-
 def unregister():
 
     wm = bpy.context.window_manager
@@ -485,7 +482,7 @@ def unregister():
             km.keymap_items.remove(kmi)
 
     addon_keymaps.clear()
-            
+
     bpy.types.CONSOLE_MT_console.remove(easy_panel)
     bpy.types.CONSOLE_MT_context_menu.remove(easy_panel)
 
