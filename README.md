@@ -12,3 +12,7 @@ create an usual text editor behaviour in console
 
 * in text editor shift+ctrl+V past expanded text (C. -> bpy.context, D. -> bpy.data.)   [example](https://youtu.be/rk0CvmmCsng)  
   copied from console or other...
+  
+* added an operator in console menu: "open module file":
+if you type import module_name in the console or just module name,  
+calling this operator it will open the module file, to see the code...
