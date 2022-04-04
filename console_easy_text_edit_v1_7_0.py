@@ -15,8 +15,8 @@ bl_info = {
     "name": "console easy text edit",
     "description": "Add text editing options to console",
     "author": "1C0D",
-    "version": (1, 6, 1),
-    "blender": (2, 93, 0),
+    "version": (1, 7, 0),
+    "blender": (3, 0, 0),
     "location": "Console",
     "category": "Console"
 }
@@ -388,6 +388,49 @@ def override(context, *param):
     }
 
 
+class CONSOLE_OT_search_module_path(bpy.types.Operator):
+    """past to text editor"""
+    bl_idname = "console.search_module_path"
+    bl_label = "print module path in console and open module"
+
+    @classmethod
+    def poll(cls, context):
+        return context.area.type == 'CONSOLE'
+
+    def execute(self, context):
+
+        def insert_exe(text):
+            bpy.ops.console.insert('INVOKE_DEFAULT',text=text)
+            bpy.ops.console.execute(interactive=True)
+            
+        bpy.ops.console.easy_select_line()
+        bpy.ops.console.copy()
+        bpy.ops.console.clear_line()        
+        sel = context.window_manager.clipboard
+        if sel:                
+            sel=sel.split()
+            module = sel[-1]            
+            # import operator
+            text = f"import {module}"
+            insert_exe(text)
+            text = f"mod_path = {module}.__file__"
+            insert_exe(text)
+            text = "import subprocess"
+            insert_exe(text)
+            import platform
+            # if platform.system() == 'W':#indows':
+                # text = 'exec(f"subprocess.Popen(fr\'explorer /open, {mod_path}\')")'
+            if platform.system() == 'Windows':
+                text = 'exec(f"subprocess.Popen([\'explorer\', mod_path])")'
+            elif platform.system().startswith(('linux','freebsd')):
+                text = 'exec(f"subprocess.Popen([\'xdg-open\', mod_path])")'
+            else:
+                text = 'exec(f"subprocess.Popen([\'open\', mod_path])")'
+            insert_exe(text)
+            insert_exe('mod_path')
+
+        return {'FINISHED'}
+
 class TEXT_OT_Paste_console_to_text_editor(bpy.types.Operator):
     """past to text editor"""
     bl_idname = "text.paste_console_to_text_editor"
@@ -410,11 +453,11 @@ class TEXT_OT_Paste_console_to_text_editor(bpy.types.Operator):
 
         return {'FINISHED'}
 
-
 def easy_panel(self, context):
     self.layout.separator()
     self.layout.operator("console.easy_select_line", text="Select Line")
     self.layout.operator("console.easy_cut", text="Cut")
+    self.layout.operator("console.search_module_path", text="open module file")
 
 
 addon_keymaps = []
@@ -422,6 +465,7 @@ addon_keymaps = []
 classes = (CONSOLE_OT_MoveCursor, CONSOLE_OT_Cut, CONSOLE_OT_Paste,
            CONSOLE_OT_Back_Space, CONSOLE_OT_Suppr, CONSOLE_OT_Insert,
            CONSOLE_OT_Undo, CONSOLE_OT_Select_Line, CONSOLE_OT_Redo,
+           CONSOLE_OT_search_module_path,
            TEXT_OT_Paste_console_to_text_editor,
            )
 
