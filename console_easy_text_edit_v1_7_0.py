@@ -457,7 +457,7 @@ def easy_panel(self, context):
     self.layout.separator()
     self.layout.operator("console.easy_select_line", text="Select Line")
     self.layout.operator("console.easy_cut", text="Cut")
-    self.layout.operator("console.search_module_path", text="open module file")
+    self.layout.operator("console.search_module_path", text="Open Module File")
 
 
 addon_keymaps = []
