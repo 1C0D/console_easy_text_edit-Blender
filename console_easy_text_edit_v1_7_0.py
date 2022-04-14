@@ -15,7 +15,7 @@ bl_info = {
     "name": "console easy text edit",
     "description": "Add text editing options to console",
     "author": "1C0D",
-    "version": (1, 7, 0),
+    "version": (1, 7, 1),
     "blender": (3, 0, 0),
     "location": "Console",
     "category": "Console"
@@ -400,8 +400,9 @@ class CONSOLE_OT_search_module_path(bpy.types.Operator):
     def execute(self, context):
 
         def insert_exe(text):
-            bpy.ops.console.insert('INVOKE_DEFAULT',text=text)
-            bpy.ops.console.execute(interactive=True)
+            for t in text:
+                bpy.ops.console.insert('INVOKE_DEFAULT',text=t)
+                bpy.ops.console.execute(interactive=True)
             
         bpy.ops.console.easy_select_line()
         bpy.ops.console.copy()
@@ -410,24 +411,17 @@ class CONSOLE_OT_search_module_path(bpy.types.Operator):
         if sel:                
             sel=sel.split()
             module = sel[-1]            
-            # import operator
-            text = f"import {module}"
-            insert_exe(text)
-            text = f"mod_path = {module}.__file__"
-            insert_exe(text)
-            text = "import subprocess"
+            text = [f"import {module}", f"mod_path = {module}.__file__", "import subprocess"]
             insert_exe(text)
             import platform
-            # if platform.system() == 'W':#indows':
-                # text = 'exec(f"subprocess.Popen(fr\'explorer /open, {mod_path}\')")'
             if platform.system() == 'Windows':
-                text = 'exec(f"subprocess.Popen([\'explorer\', mod_path])")'
+                text = ['exec(f"subprocess.Popen([\'explorer\', mod_path])")']
             elif platform.system().startswith(('linux','freebsd')):
-                text = 'exec(f"subprocess.Popen([\'xdg-open\', mod_path])")'
+                text = ['exec(f"subprocess.Popen([\'xdg-open\', mod_path])")']
             else:
-                text = 'exec(f"subprocess.Popen([\'open\', mod_path])")'
+                text = ['exec(f"subprocess.Popen([\'open\', mod_path])")']
             insert_exe(text)
-            insert_exe('mod_path')
+            insert_exe(['mod_path'])
 
         return {'FINISHED'}
 
